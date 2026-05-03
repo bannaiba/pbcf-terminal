@@ -48,12 +48,23 @@ const stdDev = (arr) => {
 const formatData = (data) => {
   if (!data || data.length < 3) throw new Error("Invalid CSV structure. Expected Targets, Sectors, and Data rows.");
 
-  const targetRow = data[0];
-  const sectorRow = data[1];
-  const dataRows = data.slice(2);
+  // Clean all keys in the data to remove hidden spaces (e.g., "IEF " -> "IEF")
+  const cleanData = data.map(row => {
+    const newRow = {};
+    Object.keys(row).forEach(key => {
+      if (key) {
+        newRow[key.trim()] = row[key];
+      }
+    });
+    return newRow;
+  });
+
+  const targetRow = cleanData[0];
+  const sectorRow = cleanData[1];
+  const dataRows = cleanData.slice(2);
 
   const headers = Object.keys(targetRow);
-  const tickers = headers.filter(k => k !== 'Date' && !k.includes('_Bench') && !k.startsWith('Metric_'));
+  const tickers = headers.filter(k => k && k !== 'Date' && !k.includes('_Bench') && !k.startsWith('Metric_'));
   
   const fundMetrics = {
     aum: targetRow['Metric_AUM'] || '$100K',
