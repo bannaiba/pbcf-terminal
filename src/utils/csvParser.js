@@ -25,7 +25,7 @@ const parseMoney = (val) => {
   if (typeof val === 'number') return val;
   if (typeof val === 'string') {
     // Remove currency symbols, commas, and any non-numeric chars except decimal/minus
-    const clean = val.replace(/[^-0.9.]/g, '');
+    const clean = val.replace(/[^-0-9.]/g, '');
     const parsed = parseFloat(clean);
     return isNaN(parsed) ? NaN : parsed;
   }
@@ -68,8 +68,13 @@ const formatData = (data) => {
   const dataRows = cleanData.slice(2);
 
   const headers = Object.keys(targetRow);
-  // Tickers include anything that isn't Date, Bench, or Metric
-  const tickers = headers.filter(k => k && k !== 'Date' && !k.includes('_Bench') && !k.startsWith('Metric_'));
+  
+  // Use target weights to identify tickers: if it has a target weight > 0, it's a ticker!
+  const tickers = headers.filter(k => {
+    if (!k || k === 'Date' || k.includes('_Bench') || k.startsWith('Metric_')) return false;
+    const weight = parsePct(targetRow[k]);
+    return weight > 0;
+  });
   
   const fundMetrics = {
     aum: targetRow['Metric_AUM'] || '$100K',
