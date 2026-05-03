@@ -113,6 +113,7 @@ const formatData = (data) => {
       portfolioValue,
       nav: compoundedPortfolioNav,
       benchmarkNav: compoundedBenchNav,
+      sanitizedTickerValues: { ...prevTickerValues }, // Store values used for this row
       rawRow: row
     });
   });
@@ -150,7 +151,8 @@ const formatData = (data) => {
   };
 
   const holdings = holdingsConfig.map(h => {
-    const liveVal = parseFloat(latestRow.rawRow[h.ticker]) || 0;
+    // Use the sanitized values we stored (handles weekends correctly)
+    const liveVal = latestRow.sanitizedTickerValues[h.ticker] || 0;
     return {
       ...h,
       liveValue: liveVal,
