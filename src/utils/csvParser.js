@@ -69,11 +69,20 @@ const formatData = (data) => {
 
   const headers = Object.keys(targetRow);
   
-  // Use target weights to identify tickers: if it has a target weight > 0, it's a ticker!
+  // Brute-force ticker detection:
   const tickers = headers.filter(k => {
-    if (!k || k === 'Date' || k.includes('_Bench') || k.startsWith('Metric_')) return false;
+    if (!k) return false;
+    const cleanK = k.trim().toUpperCase();
+    
+    // Explicitly allow your bonds
+    if (cleanK === 'IEF' || cleanK === 'LQD') return true;
+    
+    // Ignore internal columns
+    if (cleanK === 'DATE' || cleanK.includes('_BENCH') || cleanK.startsWith('METRIC_')) return false;
+    
+    // For everything else, if it has a target weight OR it looks like a ticker, include it
     const weight = parsePct(targetRow[k]);
-    return weight > 0;
+    return weight > 0 || (cleanK.length <= 5 && cleanK.length >= 2);
   });
   
   const fundMetrics = {
