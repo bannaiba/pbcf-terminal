@@ -112,13 +112,14 @@ const PerformanceDashboard = () => {
                   stroke="var(--color-text-tertiary)" 
                   tick={{ fill: 'var(--color-text-tertiary)', fontSize: 10 }} 
                   tickMargin={12}
-                  minTickGap={60} // Prevents labels from overlapping and repeating too much
+                  interval="preserveStartEnd" // Only shows start, end, and necessary points
+                  minTickGap={100} // Much larger gap to force cleaner spacing
                   tickFormatter={(str) => {
                     const date = new Date(str);
                     if (timeRange === '1W' || timeRange === '1M') {
                       return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
                     }
-                    return date.toLocaleDateString(undefined, { month: 'short', year: '2-digit' });
+                    return date.toLocaleDateString(undefined, { month: 'short' }); // Just 'Jan', 'Feb' for ALL view
                   }}
                 />
                 <YAxis 
