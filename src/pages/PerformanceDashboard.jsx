@@ -27,14 +27,14 @@ const PerformanceDashboard = () => {
 
     if (filtered.length === 0) return [];
 
-    // Re-base logic: Start at $100,000 for the start of the period
+    // Re-base logic: Calculate cumulative return from the start of the period
     const startNav = filtered[0].nav;
     const startBenchNav = filtered[0].benchmarkNav;
     
     return filtered.map(d => ({
       ...d,
-      nav: (d.nav / startNav) * 100000,
-      benchmarkNav: (d.benchmarkNav / startBenchNav) * 100000
+      navReturn: ((d.nav / startNav) - 1) * 100,
+      benchReturn: ((d.benchmarkNav / startBenchNav) - 1) * 100
     }));
   }, [data, timeRange]);
 
@@ -97,7 +97,7 @@ const PerformanceDashboard = () => {
             ))}
           </div>
           <div style={{ display: 'flex', gap: '12px' }}>
-            <button className={`tab-btn ${chartView === 'overall' ? 'active' : ''}`} onClick={() => setChartView('overall')}>Growth of $100,000</button>
+            <button className={`tab-btn ${chartView === 'overall' ? 'active' : ''}`} onClick={() => setChartView('overall')}>Cumulative Return (%)</button>
             <button className={`tab-btn ${chartView === 'sleeves' ? 'active' : ''}`} onClick={() => setChartView('sleeves')}>Asset Allocation</button>
           </div>
         </div>
@@ -112,27 +112,27 @@ const PerformanceDashboard = () => {
                   stroke="var(--color-text-tertiary)" 
                   tick={{ fill: 'var(--color-text-tertiary)', fontSize: 10 }} 
                   tickMargin={12}
-                  interval="preserveStartEnd" // Only shows start, end, and necessary points
-                  minTickGap={100} // Much larger gap to force cleaner spacing
+                  interval="preserveStartEnd"
+                  minTickGap={100}
                   tickFormatter={(str) => {
                     const date = new Date(str);
                     if (timeRange === '1W' || timeRange === '1M') {
                       return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
                     }
-                    return date.toLocaleDateString(undefined, { month: 'short' }); // Just 'Jan', 'Feb' for ALL view
+                    return date.toLocaleDateString(undefined, { month: 'short' });
                   }}
                 />
                 <YAxis 
                   stroke="var(--color-text-tertiary)" 
                   tick={{ fill: 'var(--color-text-tertiary)', fontSize: 12 }} 
-                  tickFormatter={(val) => `$${(val/1000).toFixed(0)}k`} 
+                  tickFormatter={(val) => `${val > 0 ? '+' : ''}${val.toFixed(1)}%`} 
                   domain={['auto', 'auto']} 
                 />
                 <Tooltip content={<CustomTooltip />} />
                 <Line 
                   type="monotone" 
-                  dataKey="nav" 
-                  name="Portfolio"
+                  dataKey="navReturn" 
+                  name="Portfolio Return"
                   stroke="var(--color-accent-light)" 
                   strokeWidth={3}
                   dot={false}
@@ -140,8 +140,8 @@ const PerformanceDashboard = () => {
                 />
                 <Line 
                   type="monotone" 
-                  dataKey="benchmarkNav" 
-                  name="Composite Benchmark (40/40/20)"
+                  dataKey="benchReturn" 
+                  name="Benchmark Return"
                   stroke="var(--color-text-tertiary)" 
                   strokeWidth={2}
                   strokeDasharray="5 5"
@@ -296,14 +296,14 @@ const CustomTooltip = ({ active, payload, label }) => {
           <div style={{ display: 'flex', justifyContent: 'space-between', gap: '16px' }}>
             <span style={{ fontSize: '0.85rem', color: 'var(--color-text-primary)' }}>Portfolio:</span>
             <span className="mono" style={{ fontWeight: 600, color: 'var(--color-accent-light)' }}>
-              ${payload[0].value.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+              {payload[0].value > 0 ? '+' : ''}{payload[0].value.toFixed(2)}%
             </span>
           </div>
           {payload[1] && (
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '16px' }}>
               <span style={{ fontSize: '0.85rem', color: 'var(--color-text-tertiary)' }}>Benchmark:</span>
               <span className="mono" style={{ fontWeight: 600, color: 'var(--color-text-tertiary)' }}>
-                ${payload[1].value.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                {payload[1].value > 0 ? '+' : ''}{payload[1].value.toFixed(2)}%
               </span>
             </div>
           )}
