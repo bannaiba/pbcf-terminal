@@ -61,17 +61,19 @@ const formatData = (data) => {
   const dailyReturns = [];
   let prevPortfolioValue = null;
   let prevBenchValues = { AGG: null, SPY: null, QQQ: null };
-  let compoundedBenchNav = 100000; // Starting at $100k
+  let prevTickerValues = {}; // Track previous value for each ticker individually
+  let compoundedBenchNav = 100000; 
   let compoundedPortfolioNav = 100000;
-
   const startDate = new Date(dataRows[0].Date);
 
   dataRows.forEach((row, i) => {
     let portfolioValue = 0;
     tickers.forEach(t => {
       const val = parseFloat(row[t]);
-      // If data is missing (weekends) or invalid, fallback to previous day if available
-      portfolioValue += isNaN(val) ? (prevPortfolioValue || 0) : val;
+      // Fallback to the previous value FOR THIS SPECIFIC TICKER
+      const tickerVal = isNaN(val) ? (prevTickerValues[t] || 0) : val;
+      portfolioValue += tickerVal;
+      prevTickerValues[t] = tickerVal; // Store for next row
     });
 
     // Composite Benchmark Math
@@ -116,11 +118,18 @@ const formatData = (data) => {
   });
 
   const latestRow = performanceHistory[performanceHistory.length - 1];
-  const firstRow = performanceHistory[0];
+  
+  // Find the first row that actually has a non-zero value to use as the base for returns
+  const firstValidRow = performanceHistory.find(d => d.portfolioValue > 0) || performanceHistory[0];
 
   // Holding Period Return
-  const hpr = (latestRow.portfolioValue / firstRow.portfolioValue) - 1;
-  const benchHpr = (latestRow.benchmarkNav / firstRow.benchmarkNav) - 1;
+  const hpr = firstValidRow.portfolioValue > 0 
+    ? (latestRow.portfolioValue / firstValidRow.portfolioValue) - 1 
+    : 0;
+    
+  const benchHpr = firstValidRow.benchmarkNav > 0 
+    ? (latestRow.benchmarkNav / firstValidRow.benchmarkNav) - 1 
+    : 0;
   
   // Annualized Return
   const daysElapsed = Math.max(1, (new Date(latestRow.date) - startDate) / (1000 * 60 * 60 * 24));
