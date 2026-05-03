@@ -69,13 +69,20 @@ const formatData = (data) => {
   dataRows.forEach((row, i) => {
     let portfolioValue = 0;
     tickers.forEach(t => {
-      portfolioValue += parseFloat(row[t]) || 0;
+      const val = parseFloat(row[t]);
+      // If data is missing (weekends) or invalid, fallback to previous day if available
+      portfolioValue += isNaN(val) ? (prevPortfolioValue || 0) : val;
     });
 
     // Composite Benchmark Math
-    const aggVal = parseFloat(row.AGG_Bench) || 0;
-    const spyVal = parseFloat(row.SPY_Bench) || 0;
-    const qqqVal = parseFloat(row.QQQ_Bench) || 0;
+    let aggVal = parseFloat(row.AGG_Bench);
+    let spyVal = parseFloat(row.SPY_Bench);
+    let qqqVal = parseFloat(row.QQQ_Bench);
+
+    // Robust handling for weekends/#N/A: use previous day's value if current is NaN
+    if (isNaN(aggVal)) aggVal = prevBenchValues.AGG || 0;
+    if (isNaN(spyVal)) spyVal = prevBenchValues.SPY || 0;
+    if (isNaN(qqqVal)) qqqVal = prevBenchValues.QQQ || 0;
 
     if (i > 0) {
       const aggRet = prevBenchValues.AGG ? (aggVal / prevBenchValues.AGG) - 1 : 0;
@@ -86,9 +93,14 @@ const formatData = (data) => {
       const compositeDailyReturn = (0.40 * aggRet) + (0.40 * spyRet) + (0.20 * qqqRet);
       compoundedBenchNav *= (1 + compositeDailyReturn);
 
-      const portfolioDailyRet = (portfolioValue / prevPortfolioValue) - 1;
+      // Handle portfolio return similarly
+      const portfolioDailyRet = prevPortfolioValue ? (portfolioValue / prevPortfolioValue) - 1 : 0;
       compoundedPortfolioNav *= (1 + portfolioDailyRet);
-      dailyReturns.push(portfolioDailyRet);
+      
+      // Only push non-zero returns to avoid skewing volatility on weekends
+      if (portfolioDailyRet !== 0) {
+        dailyReturns.push(portfolioDailyRet);
+      }
     }
 
     prevPortfolioValue = portfolioValue;
