@@ -20,11 +20,23 @@ export const parseCSVData = (csvText) => {
   });
 };
 
-const parsePct = (val) => {
-  if (typeof val === 'string' && val.includes('%')) {
-    return parseFloat(val.replace('%', ''));
+const parseMoney = (val) => {
+  if (typeof val === 'number') return val;
+  if (typeof val === 'string') {
+    // Remove currency symbols, commas, and whitespace
+    const clean = val.replace(/[$,\s]/g, '');
+    return parseFloat(clean) || 0;
   }
-  return parseFloat(val) || 0;
+  return 0;
+};
+
+const parsePct = (val) => {
+  if (typeof val === 'number') return val;
+  if (typeof val === 'string') {
+    const clean = val.replace(/[%\s]/g, '');
+    return parseFloat(clean) || 0;
+  }
+  return 0;
 };
 
 const stdDev = (arr) => {
@@ -69,17 +81,17 @@ const formatData = (data) => {
   dataRows.forEach((row, i) => {
     let portfolioValue = 0;
     tickers.forEach(t => {
-      const val = parseFloat(row[t]);
+      const val = parseMoney(row[t]);
       // Fallback to the previous value FOR THIS SPECIFIC TICKER
-      const tickerVal = isNaN(val) ? (prevTickerValues[t] || 0) : val;
+      const tickerVal = (isNaN(val) || val === 0) ? (prevTickerValues[t] || 0) : val;
       portfolioValue += tickerVal;
       prevTickerValues[t] = tickerVal; // Store for next row
     });
 
     // Composite Benchmark Math
-    let aggVal = parseFloat(row.AGG_Bench);
-    let spyVal = parseFloat(row.SPY_Bench);
-    let qqqVal = parseFloat(row.QQQ_Bench);
+    let aggVal = parseMoney(row.AGG_Bench);
+    let spyVal = parseMoney(row.SPY_Bench);
+    let qqqVal = parseMoney(row.QQQ_Bench);
 
     // Robust handling for weekends/#N/A: use previous day's value if current is NaN
     if (isNaN(aggVal)) aggVal = prevBenchValues.AGG || 0;
