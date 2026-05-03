@@ -110,13 +110,15 @@ const PerformanceDashboard = () => {
                 <XAxis 
                   dataKey="date" 
                   stroke="var(--color-text-tertiary)" 
-                  tick={{ fill: 'var(--color-text-tertiary)', fontSize: 12 }} 
-                  tickMargin={10}
+                  tick={{ fill: 'var(--color-text-tertiary)', fontSize: 10 }} 
+                  tickMargin={12}
+                  minTickGap={60} // Prevents labels from overlapping and repeating too much
                   tickFormatter={(str) => {
                     const date = new Date(str);
-                    return timeRange === '1W' || timeRange === '1M' 
-                      ? date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
-                      : date.toLocaleDateString(undefined, { month: 'short', year: '2-digit' });
+                    if (timeRange === '1W' || timeRange === '1M') {
+                      return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+                    }
+                    return date.toLocaleDateString(undefined, { month: 'short', year: '2-digit' });
                   }}
                 />
                 <YAxis 
