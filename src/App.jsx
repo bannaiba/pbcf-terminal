@@ -32,27 +32,30 @@ const Navigation = () => {
 
 const navStyle = {
   display: 'flex',
-  justifyContent: 'space-between',
+  justifyContent: 'center',
   alignItems: 'center',
-  padding: '16px 32px',
+  padding: '8px 24px',
   margin: '24px auto',
-  maxWidth: '1400px',
+  width: 'fit-content',
   borderRadius: '100px', // pill shape
   position: 'sticky',
   top: '24px',
-  zIndex: 100
+  zIndex: 100,
+  gap: '32px'
 };
 
 const logoStyle = {
   display: 'flex',
   alignItems: 'center',
   gap: '12px',
-  fontSize: '1.25rem'
+  fontSize: '1.1rem',
+  borderRight: '1px solid rgba(255,255,255,0.1)',
+  paddingRight: '24px'
 };
 
 const navLinksStyle = {
   display: 'flex',
-  gap: '24px'
+  gap: '8px'
 };
 
 const linkStyle = {
